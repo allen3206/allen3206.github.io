@@ -8,129 +8,47 @@
 </head>
 <body>
     <div class="container">
-        <h2 style="font-size: 21.5px;">日幣台幣轉換器(計算海外刷卡手續費)</h2>
-        <div class="input-container">
+        <h2>日幣台幣轉換器</h2>
+        
+        <div id="loading">即時匯率更新中...</div>
+
+        <div class="input-group">
             <label for="jpyAmount">請輸入日幣 (JPY):</label>
-            <input type="number" id="jpyAmount">
-            <button onclick="clearInput()" class="clear-button">清空</button>
+            <div class="input-container">
+                <input type="number" id="jpyAmount" placeholder="例如: 1000" inputmode="decimal">
+                <button onclick="clearInput()" class="clear-button">清空</button>
+            </div>
+            <div id="inputError" class="error-message"></div>
         </div>
-        <div id="inputError" class="error-message"></div>
-        <h5>預設數值</h5>
+
+        <h5>快速預設金額</h5>
         <div class="preset-buttons">
-            <button onclick="presetAmount(1220)" class="preset-button">1220¥</button>
-            <button onclick="presetAmount(2440)" class="preset-button">2440¥</button>
             <button onclick="presetAmount(120)" class="preset-button">120¥</button>
             <button onclick="presetAmount(610)" class="preset-button">610¥</button>
+            <button onclick="presetAmount(1220)" class="preset-button">1220¥</button>
             <button onclick="presetAmount(1840)" class="preset-button">1840¥</button>
+            <button onclick="presetAmount(2440)" class="preset-button">2440¥</button>
             <button onclick="presetAmount(3680)" class="preset-button">3680¥</button>
             <button onclick="presetAmount(6100)" class="preset-button">6100¥</button>
             <button onclick="presetAmount(12000)" class="preset-button">12000¥</button>
         </div>
-        <button onclick="convertCurrency()">轉換</button>
+
         <div class="output-container">
-            <div id="twdAmount">轉換為台幣(TWD):</div>
-            <div id="fee">1.5%海外手續費(TWD):</div>
-            <div id="convertedAmount">最終刷卡金額(TWD):</div>
-            <div id="nowRate">目前匯率:</div>
-            <div id="rateTimestamp">匯率更新時間:</div>
+            <div class="output-item" id="twdAmount">轉換為台幣(TWD): <span>-</span></div>
+            <div class="output-item" id="fee">1.5%海外手續費: <span>-</span></div>
+            <div class="output-item" id="convertedAmount">最終刷卡金額: <span>-</span></div>
+        </div>
+
+        <div class="info-section">
+            <div id="nowRate">目前匯率: 載入中...</div>
+            <div id="rateTimestamp">更新時間: -</div>
         </div>
     </div>
 
-    <footer style="text-align: center; margin-top: 80px;">
-        <p>API 來源: <a href="https://v6.exchangerate-api.com/v6/92b4ac42a4b73d411d9b0c2b/latest/JPY">ExchangeRate-API</a></p>
-        <p><strong>*本網頁資料僅供參考*</strong></p>
-        <!-- <p style="font-size: 13px;"><i>test</i></p> -->
+    <footer>
+        <p>資料僅供參考 | API: <a href="https://v6.exchangerate-api.com/" target="_blank">ExchangeRate-API</a></p>
     </footer>
 
-    <script>
-        const jpyAmountInput = document.getElementById('jpyAmount');
-        const inputError = document.getElementById('inputError');
-        const twdAmountDiv = document.getElementById('twdAmount');
-        const feeDiv = document.getElementById('fee');
-        const convertedAmountDiv = document.getElementById('convertedAmount');
-        const rateTimestampDiv = document.getElementById('rateTimestamp');
-        const nowRate = document.getElementById('nowRate');
-
-        function presetAmount(amount) {
-            jpyAmountInput.value = amount;
-            convertCurrency();
-        }
-
-        function clearInput() {
-            jpyAmountInput.value = '';
-            inputError.innerHTML = '';
-            twdAmountDiv.innerHTML = '轉換為台幣(TWD):';
-            feeDiv.innerHTML = '1.5%海外手續費(TWD):';
-            convertedAmountDiv.innerHTML = '最終刷卡金額(TWD):';
-            nowRate.innerHTML = '目前匯率:';
-            rateTimestampDiv.innerHTML = '匯率更新時間:';
-        }
-
-        function formatNumber(num) {
-            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-        }
-
-        async function fetchExchangeRate() {
-            try {
-                const response = await fetch('https://v6.exchangerate-api.com/v6/92b4ac42a4b73d411d9b0c2b/latest/JPY');
-                if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-                const data = await response.json();
-
-                // 找出TWD的汇率
-                const rate = data.conversion_rates.TWD;
-                const updateTimestamp = data.time_last_update_unix * 1000; // API的时间戳是秒，需要转换为毫秒
-                return { rate, updateTimestamp };
-            } catch (error) {
-                throw new Error("無法取得匯率資料。");
-            }
-        }
-
-        function formatDateWithTimezone(timestamp) {
-            const options = {
-                timeZone: 'Asia/Taipei',
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                timeZoneName: 'short'
-            };
-            return new Intl.DateTimeFormat('zh-TW', options).format(new Date(timestamp));
-        }
-
-        function showResult(rate, twdAmount, fee, convertedAmount, formattedDate) {
-            twdAmountDiv.innerHTML = `轉換為台幣(TWD): <strong>${formatNumber(twdAmount)}</strong>`;
-            feeDiv.innerHTML = `1.5%海外手續費(TWD): <strong>${formatNumber(fee)}</strong>`;
-            convertedAmountDiv.innerHTML = `最終刷卡金額(TWD): <strong>${formatNumber(convertedAmount)}</strong>`;
-            nowRate.innerHTML = `目前匯率: <strong>${rate}</strong>`;
-            rateTimestampDiv.innerHTML = `匯率更新時間: <strong>${formattedDate}</strong>`;
-        }
-
-        async function convertCurrency() {
-            const jpyAmount = parseFloat(jpyAmountInput.value);
-
-            inputError.innerHTML = '';
-
-            if (!jpyAmount || jpyAmount <= 0) {
-                inputError.innerHTML = "請輸入有效的數值!";
-                return;
-            }
-
-            try {
-                const { rate, updateTimestamp } = await fetchExchangeRate();
-                const twdAmount = (jpyAmount * rate).toFixed(2);
-                const fee = (twdAmount * 0.015).toFixed(2);
-                const convertedAmount = (parseFloat(twdAmount) + parseFloat(fee)).toFixed(2);
-                const formattedDate = formatDateWithTimezone(updateTimestamp);
-
-                showResult(rate, twdAmount, fee, convertedAmount, formattedDate);
-
-            } catch (error) {
-                console.error("Error:", error);
-                inputError.innerHTML = error.message;
-            }
-        }
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
