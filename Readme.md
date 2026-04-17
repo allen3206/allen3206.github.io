@@ -1,4 +1,4 @@
-https://allen01116.github.io/index.html
+https://allen3206.github.io/index.html
 
 日幣台幣轉換器(計算海外刷卡手續費)
 
